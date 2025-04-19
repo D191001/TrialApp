@@ -19,14 +19,16 @@ jobs:
       - name: Build and push backend
         uses: docker/build-push-action@v4
         with:
-          context: ./backend
+          context: .
+          file: ./backend/Dockerfile
           push: true
-          tags: trumphack/trialapp-backend:latest
+          tags: trumphack/trialapp:latest
 
       - name: Build and push frontend
         uses: docker/build-push-action@v4
         with:
-          context: ./frontend
+          context: .
+          file: ./frontend/Dockerfile
           push: true
           tags: trumphack/trialapp-frontend:latest
 
@@ -35,7 +37,7 @@ jobs:
         with:
           context: ./gateway
           push: true
-          tags: trumphack/trialapp-nginx:latest
+          tags: trumphack/trialappgateway:latest
 
   deploy:
     needs: build-and-push
