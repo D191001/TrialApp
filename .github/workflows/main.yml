@@ -80,10 +80,25 @@ jobs:
           port: 22
           script: |
             cd trialapp
-            docker compose -f docker-compose.production.yml pull
+            # Останавливаем контейнеры
             docker compose -f docker-compose.production.yml down
+            # Очищаем неиспользуемые ресурсы
+            docker system prune -f
+            # Подтягиваем новые образы
+            docker compose -f docker-compose.production.yml pull
+            # Запускаем базу данных отдельно
+            docker compose -f docker-compose.production.yml up -d db
+            # Ждем готовности базы
+            sleep 15
+            # Запускаем остальные сервисы
             docker compose -f docker-compose.production.yml up -d
-            # Ждем запуска базы данных
-            sleep 10
-            # Применяем миграции
-            docker compose -f docker-compose.production.yml exec -T backend alembic upgrade head
+            # Ждем запуска backend
+            sleep 15
+            # Проверяем статус backend
+            if docker compose -f docker-compose.production.yml ps | grep -q "backend.*running"; then
+              # Применяем миграции
+              docker compose -f docker-compose.production.yml exec -T backend alembic upgrade head
+            else
+              echo "Backend container is not running"
+              exit 1
+            fi
