@@ -87,11 +87,19 @@ jobs:
             docker compose -f docker-compose.production.yml pull
 
             echo "Starting services..."
+            docker compose -f docker-compose.production.yml up -d db
+            
+            # Ждем запуска базы и создаем пользователя
+            sleep 5
+            docker compose -f docker-compose.production.yml exec -T db psql -U postgres -c "CREATE USER django_user WITH PASSWORD 'mysecretpassword';"
+            docker compose -f docker-compose.production.yml exec -T db psql -U postgres -c "CREATE DATABASE django OWNER django_user;"
+
+            echo "Starting remaining services..."
             docker compose -f docker-compose.production.yml up -d
 
             echo "Checking backend health..."
             for i in {1..30}; do
-              if curl -s http://localhost:8000/health-check | grep -q "healthy"; then
+              if curl -s http://localhost:8000/api/health-check | grep -q "healthy"; then
                 echo "Backend is healthy"
                 exit 0
               fi
