@@ -86,29 +86,19 @@ jobs:
             echo "Pulling new images..."
             docker compose -f docker-compose.production.yml pull
 
-            echo "Starting database..."
-            docker compose -f docker-compose.production.yml up -d db
-            
-            echo "Waiting for database..."
-            until docker compose -f docker-compose.production.yml logs db 2>&1 | grep -q "database system is ready"; do
-              sleep 5
-              echo "Waiting for database to be ready..."
-            done
-
-            echo "Starting all services..."
+            echo "Starting services..."
             docker compose -f docker-compose.production.yml up -d
 
             echo "Checking backend health..."
-            for i in {1..12}; do
-              if docker compose -f docker-compose.production.yml ps backend | grep -q "running"; then
-                echo "Backend is running"
-                docker compose -f docker-compose.production.yml logs backend
+            for i in {1..30}; do
+              if curl -s http://localhost:8000/health-check | grep -q "healthy"; then
+                echo "Backend is healthy"
                 exit 0
               fi
-              echo "Waiting for backend... ($i/12)"
-              sleep 5
+              echo "Waiting for backend... ($i/30)"
+              sleep 2
             done
 
-            echo "Backend failed to start"
-            docker compose -f docker-compose.production.yml logs backend
+            echo "Backend health check failed"
+            docker compose -f docker-compose.production.yml logs
             exit 1
