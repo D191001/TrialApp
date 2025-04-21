@@ -80,25 +80,35 @@ jobs:
           port: 22
           script: |
             cd trialapp
-            # Останавливаем контейнеры
+            echo "Stopping containers..."
             docker compose -f docker-compose.production.yml down
-            # Очищаем неиспользуемые ресурсы
-            docker system prune -f
-            # Подтягиваем новые образы
+
+            echo "Pulling new images..."
             docker compose -f docker-compose.production.yml pull
-            # Запускаем базу данных отдельно
+
+            echo "Starting database..."
             docker compose -f docker-compose.production.yml up -d db
-            # Ждем готовности базы
-            sleep 15
-            # Запускаем остальные сервисы
+            
+            echo "Waiting for database..."
+            until docker compose -f docker-compose.production.yml logs db 2>&1 | grep -q "database system is ready"; do
+              sleep 5
+              echo "Waiting for database to be ready..."
+            done
+
+            echo "Starting all services..."
             docker compose -f docker-compose.production.yml up -d
-            # Ждем запуска backend
-            sleep 15
-            # Проверяем статус backend
-            if docker compose -f docker-compose.production.yml ps | grep -q "backend.*running"; then
-              # Применяем миграции
-              docker compose -f docker-compose.production.yml exec -T backend alembic upgrade head
-            else
-              echo "Backend container is not running"
-              exit 1
-            fi
+
+            echo "Checking backend health..."
+            for i in {1..12}; do
+              if docker compose -f docker-compose.production.yml ps backend | grep -q "running"; then
+                echo "Backend is running"
+                docker compose -f docker-compose.production.yml logs backend
+                exit 0
+              fi
+              echo "Waiting for backend... ($i/12)"
+              sleep 5
+            done
+
+            echo "Backend failed to start"
+            docker compose -f docker-compose.production.yml logs backend
+            exit 1

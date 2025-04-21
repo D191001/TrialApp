@@ -13,7 +13,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:8080",
-        "http://localhost:8000",
+        "http://frontend:8080",
         "https://trialapp.ru",
     ],
     allow_credentials=True,
