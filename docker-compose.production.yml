@@ -21,9 +21,7 @@ services:
     image: trumphack/trialapp-frontend:latest
     environment:
       - NODE_ENV=production
-    depends_on:
-      - backend
-    restart: always
+    restart: unless-stopped
 
   gateway:
     image: trumphack/trialapp-gateway:latest
