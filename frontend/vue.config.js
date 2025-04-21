@@ -16,5 +16,8 @@ module.exports = {
       minSize: 20000,
       maxSize: 244000
     })
-  }
+  },
+  productionSourceMap: false,
+  publicPath: '/',
+  outputDir: 'dist'
 }
