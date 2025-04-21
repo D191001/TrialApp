@@ -1,12 +1,10 @@
 <template>
   <div class="home">
-    <h1>Добро пожаловать</h1>
+    <h1>{{ isAuthenticated ? 'Добро пожаловать!' : 'Пожалуйста, войдите в систему' }}</h1>
     <div v-if="isAuthenticated">
-      <p>Вы вошли в систему</p>
-      <FeedbackForm />
+      <feedback-form />
     </div>
     <div v-else>
-      <p>Пожалуйста, войдите через Яндекс</p>
       <router-link to="/login" class="login-link">Войти</router-link>
     </div>
   </div>
@@ -20,9 +18,17 @@ export default {
   components: {
     FeedbackForm
   },
-  computed: {
-    isAuthenticated() {
-      return !!localStorage.getItem('token')
+  data() {
+    return {
+      isAuthenticated: false
+    }
+  },
+  created() {
+    this.checkAuth()
+  },
+  methods: {
+    checkAuth() {
+      this.isAuthenticated = !!localStorage.getItem('token')
     }
   }
 }

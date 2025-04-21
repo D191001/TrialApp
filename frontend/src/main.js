@@ -3,7 +3,9 @@ import App from './App.vue'
 import router from './router'
 import axios from 'axios'
 
-axios.defaults.baseURL = 'http://localhost:8000'; // Замените на URL вашего API
+axios.defaults.baseURL = process.env.NODE_ENV === 'production'
+    ? '/api'
+    : 'http://localhost:8000';
 
 const app = createApp(App)
 app.config.globalProperties.$axios = axios

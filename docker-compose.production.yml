@@ -1,34 +1,57 @@
-version: '3.8'
+version: "3.8"
 
 services:
   db:
-    image: postgres
-    env_file: .env
+    image: postgres:15
+    container_name: trialapp_db_prod
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - pg_data_production:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
-    image: trumphack/trialapp
-    env_file: .env
+    image: trumphack/trialapp-backend:latest
+    container_name: trialapp_backend_prod
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - PYTHONPATH=/app:/app/app
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - YANDEX_CLIENT_ID=${YANDEX_CLIENT_ID}
+      - YANDEX_CLIENT_SECRET=${YANDEX_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
     volumes:
-      - static_volume:/trialapp_static
-      - media:/media
+      - static_volume:/app/static
+      - media:/app/media
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
-    image: trumphack/trialapp-frontend
+    image: trumphack/trialapp-frontend:latest
+    container_name: trialapp_frontend_prod
+    environment:
+      - NODE_ENV=production
+      - VUE_APP_API_URL=/api
+      - VUE_APP_YANDEX_CLIENT_ID=${YANDEX_CLIENT_ID}
     depends_on:
       - backend
 
   gateway:
-    image: trumphack/trialappgateway
-    env_file: .env
+    image: trumphack/trialapp-gateway:latest
+    container_name: trialapp_gateway_prod
     volumes:
       - static_volume:/staticfiles
       - media:/media
     ports:
-      - "8000:80"
+      - "80:80"
     depends_on:
       - frontend
       - backend

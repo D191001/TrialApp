@@ -1,17 +1,16 @@
+from app.db.database import get_db
+from app.schemas import users as user_schemas
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
-from backend.app.db.database import get_db
-from backend.app.models import schemas
 
 router = APIRouter()
 
 
-@router.post("/register/yandex", response_model=schemas.User)
+@router.post("/register/yandex", response_model=user_schemas.User)
 async def register_user_with_yandex(token: str, db: Session = Depends(get_db)):
     try:
         # Тут будет логика регистрации через Яндекс
-        user = schemas.User(
+        user = user_schemas.User(
             id=1,
             email="test@example.com",
             full_name="Test User",

@@ -1,9 +1,8 @@
+from app.db import models
+from app.db.database import get_db
+from app.schemas import feedback as feedback_schemas
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
-from backend.app.db import models
-from backend.app.db.database import get_db
-from backend.app.schemas import feedback as feedback_schemas
 
 router = APIRouter()
 

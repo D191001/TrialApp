@@ -8,15 +8,16 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Копируем и устанавливаем зависимости
-COPY requirements.txt .
+# Добавляем путь к приложению в PYTHONPATH
+ENV PYTHONPATH=/app
+
+# Копируем только requirements.txt сначала
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код приложения
+# Потом копируем остальные файлы
 COPY . .
 
-# Указываем порт
 EXPOSE 8000
 
-# Запускаем приложение через uvicorn
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

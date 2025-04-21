@@ -3,15 +3,58 @@ version: "3.8"
 services:
   db:
     image: postgres:15
-    restart: always
+    container_name: trialapp_db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: db_trialapp
-    ports:
-      - "5432:5432"
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=db_trialapp
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: trialapp_backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/db_trialapp
+      - PYTHONPATH=/app:/app/app
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: trialapp_frontend
+    user: "node"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/node_modules/.cache
+    ports:
+      - "8080:8080"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VUE_APP_YANDEX_CLIENT_ID=${YANDEX_CLIENT_ID}
+    depends_on:
+      - backend
+    command: >
+      sh -c "mkdir -p /app/node_modules/.cache &&
+             chmod -R 777 /app/node_modules/.cache &&
+             npm run serve"
 
 volumes:
   postgres_data:
+    name: trialapp_postgres_data

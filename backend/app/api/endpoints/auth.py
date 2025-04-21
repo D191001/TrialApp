@@ -1,11 +1,11 @@
 import os
 
+import httpx
+from app.db.database import get_db
+from app.services import yandex_oauth
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-
-from backend.app.db.database import get_db
-from backend.app.services import yandex_oauth
 
 router = APIRouter()
 

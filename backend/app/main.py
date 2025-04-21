@@ -11,7 +11,7 @@ app = FastAPI()
 # Добавляем CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://frontend:8080"],
+    allow_origins=["http://localhost:8080"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,8 +26,3 @@ app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 @app.get("/health-check")
 async def health_check():
     return {"status": "healthy"}
-
-
-@app.get("/")
-async def root():
-    return {"message": "API is running"}
