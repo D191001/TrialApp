@@ -80,15 +80,23 @@ jobs:
           port: 22
           script: |
             cd trialapp
-            docker compose -f docker-compose.production.yml down
+            docker compose -f docker-compose.production.yml down -v
             docker compose -f docker-compose.production.yml pull
+            
+            # Запускаем БД и ждем
             docker compose -f docker-compose.production.yml up -d db
             sleep 10
+            
+            # Создаем пользователя и БД
+            docker compose -f docker-compose.production.yml exec -T db psql -U postgres -c "CREATE USER django_user WITH PASSWORD 'mysecretpassword';"
+            docker compose -f docker-compose.production.yml exec -T db psql -U postgres -c "CREATE DATABASE django WITH OWNER django_user;"
+            
+            # Запускаем остальные сервисы
             docker compose -f docker-compose.production.yml up -d
             
-            # Проверка через nginx
+            # Проверяем через curl напрямую бэкенд
             for i in {1..10}; do
-              if curl -s http://localhost:8000/api/health-check | grep -q "healthy"; then
+              if curl -s http://localhost:8000/health-check | grep -q "healthy"; then
                 echo "Application deployed successfully"
                 exit 0
               fi
