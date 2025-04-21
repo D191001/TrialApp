@@ -4,45 +4,51 @@ services:
   db:
     image: postgres:15
     container_name: trialapp_db_prod
+    env_file: .env
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=django_user
+      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_DB=django
+    command: postgres -c 'max_connections=1000' -c 'password_encryption=md5'
     volumes:
       - pg_data_production:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
-      interval: 5s
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
       timeout: 5s
       retries: 5
 
   backend:
     image: trumphack/trialapp-backend:latest
     container_name: trialapp_backend_prod
+    env_file: .env
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      - PYTHONPATH=/app:/app/app
-      - DEBUG=${DEBUG}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - YANDEX_CLIENT_ID=${YANDEX_CLIENT_ID}
-      - YANDEX_CLIENT_SECRET=${YANDEX_CLIENT_SECRET}
-      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=postgresql://django_user:mysecretpassword@db:5432/django
+      - PYTHONPATH=/app
     volumes:
       - static_volume:/app/static
       - media:/app/media
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     image: trumphack/trialapp-frontend:latest
     container_name: trialapp_frontend_prod
+    env_file: .env
     environment:
       - NODE_ENV=production
-      - VUE_APP_API_URL=/api
-      - VUE_APP_YANDEX_CLIENT_ID=${YANDEX_CLIENT_ID}
+      - PORT=8080
+    volumes:
+      - static_volume:/app/static
     depends_on:
       - backend
+    command: npx serve -s dist -l 8080
+    restart: unless-stopped
+    networks:
+      - default
 
   gateway:
     image: trumphack/trialapp-gateway:latest
@@ -55,8 +61,15 @@ services:
     depends_on:
       - frontend
       - backend
+    networks:
+      - default
 
 volumes:
   pg_data_production:
   static_volume:
   media:
+
+
+networks:
+  default:
+    driver: bridge

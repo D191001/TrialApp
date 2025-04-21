@@ -1,15 +1,15 @@
 import os
 
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-load_dotenv()
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://django_user:mysecretpassword@db:5432/django"
+)
 
-DATABASE_URL = "postgresql://postgres:postgres@db:5432/db_trialapp"
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=3600)
 
-engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

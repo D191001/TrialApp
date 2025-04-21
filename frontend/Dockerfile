@@ -1,19 +1,13 @@
-FROM node:16-alpine
-
+FROM node:16-alpine as build
 WORKDIR /app
-
-ENV NODE_ENV=production
-ENV CI=true
-
 COPY package*.json ./
-
-# Устанавливаем зависимости с флагами для CI
-RUN npm ci --only=production --no-audit
-
+RUN npm install
 COPY . .
+RUN npm run build
 
-USER node
-
+FROM node:16-alpine
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+RUN npm install -g serve@14.2.1
 EXPOSE 8080
-
-CMD ["npm", "run", "serve"]
+CMD ["npx", "serve", "-s", "dist", "-l", "8080"]
