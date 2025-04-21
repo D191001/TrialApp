@@ -6,12 +6,11 @@ ENV NODE_ENV=production
 ENV CI=true
 
 COPY package*.json ./
-RUN npm install --legacy-peer-deps --no-interactive
+
+# Устанавливаем зависимости с флагами для CI
+RUN npm ci --only=production --no-audit
 
 COPY . .
-
-# Оптимизируем chown, применяем только к необходимым директориям
-RUN chown -R node:node /app/node_modules /app/.cache 2>/dev/null || true
 
 USER node
 
