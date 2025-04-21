@@ -28,6 +28,7 @@ app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 
 
 @app.get("/health-check")
+@app.get("/api/health-check")
 async def health_check():
     return {"status": "healthy"}
 
