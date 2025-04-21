@@ -9,7 +9,7 @@ services:
     restart: always
 
   backend:
-    image: trumphack/trialapp-backend:latest
+    image: your-dockerhub-username/trialapp-backend:latest
     env_file: .env
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
@@ -18,13 +18,13 @@ services:
     restart: always
 
   frontend:
-    image: trumphack/trialapp-frontend:latest
+    image: your-dockerhub-username/trialapp-frontend:latest
     environment:
       - NODE_ENV=production
     restart: unless-stopped
 
   gateway:
-    image: trumphack/trialapp-gateway:latest
+    image: your-dockerhub-username/trialapp-gateway:latest
     ports:
       - "80:80"
     depends_on:
