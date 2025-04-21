@@ -47,11 +47,11 @@ services:
   gateway:
     image: trumphack/trialapp-gateway:latest
     container_name: trialapp_gateway_prod
+    ports:
+      - "8000:80"
     volumes:
       - static_volume:/staticfiles
       - media:/media
-    ports:
-      - "80:80"
     depends_on:
       - frontend
       - backend

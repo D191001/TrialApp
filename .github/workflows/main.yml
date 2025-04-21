@@ -83,4 +83,7 @@ jobs:
             docker compose -f docker-compose.production.yml pull
             docker compose -f docker-compose.production.yml down
             docker compose -f docker-compose.production.yml up -d
-            docker compose -f docker-compose.production.yml exec backend alembic upgrade head
+            # Ждем запуска базы данных
+            sleep 10
+            # Применяем миграции
+            docker compose -f docker-compose.production.yml exec -T backend alembic upgrade head
