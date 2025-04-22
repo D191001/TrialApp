@@ -17,7 +17,7 @@ services:
     backend:
         image: trumphack/trialapp
         container_name: trialapp_backend_prod
-        env_file: .env
+        env_file: .env.production
         volumes:
             - static_volume:/app/static
             - media:/app/media
@@ -28,6 +28,10 @@ services:
         environment:
             DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
             PYTHONPATH: /app
+            CORS_ORIGINS: "https://trialapp.ru,http://localhost:8000"
+            CORS_ALLOW_CREDENTIALS: "true"
+            SESSION_COOKIE_SECURE: "true"
+            SESSION_COOKIE_SAMESITE: "Lax"
         command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
     frontend:
@@ -36,6 +40,8 @@ services:
         env_file: .env
         environment:
             - NODE_ENV=production
+            - API_URL=/api
+            - VUE_APP_API_URL=/api
         depends_on:
             - backend
         restart: unless-stopped
@@ -43,10 +49,16 @@ services:
     gateway:
         image: trumphack/trialappgateway
         container_name: trialapp_gateway_prod
-        env_file: .env
+        env_file: .env.production
         volumes:
             - static_volume:/staticfiles
             - media:/media
+        environment:
+            BACKEND_HOST: backend
+            FRONTEND_HOST: frontend
+            NGINX_HOST: trialapp.ru
+            BACKEND_URL: http://backend:8000
+            FRONTEND_URL: http://frontend:80
         ports:
             - "8000:80"
         depends_on:
