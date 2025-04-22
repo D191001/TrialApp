@@ -30,12 +30,28 @@ async def login_yandex():
     return {"auth_url": auth_url}
 
 
-@router.get("/auth/callback/yandex")
-async def yandex_callback(code: str):
+@router.get("/callback")
+async def yandex_callback(code: str, response: Response):
     """
     Обработчик callback от Яндекса
     """
-    return {"status": "success", "auth_code": code}
+    try:
+        # Получаем токен
+        access_token = await oauth.get_access_token(code)
+        
+        # Сохраняем в cookie
+        response = RedirectResponse(url="/")
+        response.set_cookie(
+            key="session",
+            value=access_token,
+            httponly=True,
+            secure=True,
+            samesite='lax',
+            domain="trialapp.ru"
+        )
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/me")
