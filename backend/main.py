@@ -17,14 +17,15 @@ app.add_middleware(
         "https://trialapp.ru",
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "Set-Cookie", "Authorization"],
+    expose_headers=["Set-Cookie"],
 )
 
-# Роуты без префикса api, т.к. он добавляется в nginx
-app.include_router(auth.router, tags=["auth"])
-app.include_router(users.router, prefix="/users", tags=["users"])
-app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
+# Роуты с префиксом api для соответствия конфигурации фронтенда
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
+app.include_router(feedback.router, prefix="/api/feedback", tags=["feedback"])
 
 
 @app.get("/health-check")

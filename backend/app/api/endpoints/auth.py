@@ -1,7 +1,8 @@
 import os
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response, Depends
 from fastapi.responses import RedirectResponse
+from app.api.deps import get_current_user
 
 router = APIRouter()
 
@@ -35,3 +36,28 @@ async def yandex_callback(code: str):
     Обработчик callback от Яндекса
     """
     return {"status": "success", "auth_code": code}
+
+
+@router.get("/me")
+async def read_users_me(current_user=Depends(get_current_user)):
+    """
+    Проверка текущего пользователя
+    """
+    return current_user
+
+
+@router.post("/login/yandex")
+async def yandex_login(response: Response, ...):
+    """
+    Логин через Яндекс
+    """
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    response.set_cookie(
+        key="session",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite='lax',
+        domain="trialapp.ru"
+    )
+    return {"access_token": access_token}
