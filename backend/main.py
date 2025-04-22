@@ -13,7 +13,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:8080",
-        "http://frontend:8080",
+        "http://localhost:8000",
         "https://trialapp.ru",
     ],
     allow_credentials=True,
@@ -21,8 +21,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Роуты
-app.include_router(auth.router, prefix="/auth", tags=["auth"])
+# Роуты без префикса api, т.к. он добавляется в nginx
+app.include_router(auth.router, tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 
