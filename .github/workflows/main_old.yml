@@ -123,13 +123,4 @@ jobs:
           sudo docker compose -f docker-compose.production.yml exec trialapp python manage.py migrate
           sudo docker compose -f docker-compose.production.yml exec trialapp python manage.py collectstatic
           sudo docker compose -f docker-compose.production.yml exec trialapp cp -r /app/collected_static/. /trialapp_static/static/eate.py", line 549, in create_engine
-    u = _url.make_url(url)
-        ^^^^^^^^^^^^^^^^^^
-  File "/home/trump/Dev/TrialApp/venv/lib/python3.12/site-packages/sqlalchemy/engine/url.py", line 856, in make_url
-    return _parse_url(name_or_url)
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/trump/Dev/TrialApp/venv/lib/python3.12/site-packages/sqlalchemy/engine/url.py", line 917, in _parse_url
-    components["port"] = int(components["port"])
-                         ^^^^^^^^^^^^^^^^^^^^^^^
-ValueError: invalid literal for int() with base 10: 'port'
-^CINFO:     Stopping reloader process [12556]
+  
