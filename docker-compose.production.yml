@@ -4,7 +4,7 @@ services:
     db:
         image: postgres:15
         container_name: trialapp_db_prod
-        env_file: .env.production
+        env_file: .env
         volumes:
             - pg_data_production:/var/lib/postgresql/data
         healthcheck:
