@@ -10,7 +10,7 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 
 Base = declarative_base()
 
@@ -49,7 +49,16 @@ class Comment(Base):
     __tablename__ = "comments"
 
     id = Column(Integer, primary_key=True, index=True)
-    text = Column(String)
+    text = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+    is_deleted = Column(Boolean, default=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    parent_id = Column(Integer, ForeignKey("comments.id"), nullable=True)
+
     author = relationship("User", back_populates="comments")
+    replies = relationship(
+        "Comment", backref=backref("parent", remote_side=[id])
+    )

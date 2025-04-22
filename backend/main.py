@@ -6,7 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(
+    title="TrialApp API",
+    description="Backend API с OAuth2 авторизацией через Яндекс и системой комментариев",
+    version="1.0.0",
+    docs_url="/api/docs",  # URL для Swagger UI
+    redoc_url="/api/redoc",  # URL для ReDoc
+)
 
 # Добавляем CORS middleware
 app.add_middleware(
@@ -15,15 +21,15 @@ app.add_middleware(
         "http://localhost:8080",
         "http://localhost:8000",
         "https://trialapp.ru",
+        "https://oauth.yandex.ru",
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Content-Type", "Set-Cookie", "Authorization"],
-    expose_headers=["Set-Cookie"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
 )
 
 # Роуты с префиксом api для соответствия конфигурации фронтенда
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(auth.router, tags=["auth"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(feedback.router, prefix="/api/feedback", tags=["feedback"])
 
