@@ -15,6 +15,7 @@ app.add_middleware(
         "https://trialapp.ru",
         "http://localhost:8000",
         "http://localhost:3000",
+        "https://oauth.yandex.ru",  # Добавляем домен Яндекса
     ],
     allow_credentials=True,
     allow_methods=["*"],

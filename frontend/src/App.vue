@@ -1,58 +1,15 @@
 <template>
   <div id="app">
-    <nav>
-      <router-link to="/">Главная</router-link> |
-      <router-link to="/login" v-if="!isAuthenticated">Войти</router-link>
-      <span v-else>
-        <span class="user-status">Вы авторизованы</span> |
-        <a href="#" @click.prevent="logout">Выйти</a>
-      </span>
-    </nav>
-    <router-view/>
-    <div v-if="isAuthenticated" class="feedback-form">
-      <h3>Обратная связь</h3>
-      <textarea 
-        v-model="feedbackText" 
-        placeholder="Введите ваше сообщение"
-        rows="4"
-      ></textarea>
-      <button @click="sendFeedback" :disabled="!feedbackText">Отправить</button>
-    </div>
+    <SystemHealth />
+    <AuthCheck />
+    <Comments />
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      isAuthenticated: false,
-      feedbackText: ''
-    }
-  },
-  created() {
-    // Проверяем наличие токена при загрузке
-    this.checkAuth()
-  },
-  methods: {
-    checkAuth() {
-      // Проверяем наличие токена в localStorage
-      this.isAuthenticated = !!localStorage.getItem('token')
-    },
-    logout() {
-      localStorage.removeItem('token')
-      this.isAuthenticated = false
-      this.$router.push('/login')
-    },
-    sendFeedback() {
-      if (this.feedbackText) {
-        // Здесь будет логика отправки на сервер
-        console.log('Отправка обратной связи:', this.feedbackText)
-        this.feedbackText = ''
-        alert('Спасибо за обратную связь!')
-      }
-    }
-  }
-}
+<script setup lang="ts">
+import SystemHealth from './components/SystemHealth.vue'
+import AuthCheck from './components/AuthCheck.vue'
+import Comments from './components/Comments.vue'
 </script>
 
 <style>

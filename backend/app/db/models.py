@@ -22,8 +22,15 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
+    yandex_id = Column(String, unique=True)
+    last_login = Column(DateTime, default=datetime.utcnow)
+    access_token = Column(String)
+    avatar_url = Column(String)
+    refresh_token = Column(String)
+    token_expires = Column(DateTime)
 
     feedbacks = relationship("Feedback", back_populates="user")
+    comments = relationship("Comment", back_populates="author")
 
 
 class Feedback(Base):
@@ -36,3 +43,13 @@ class Feedback(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="feedbacks")
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    author = relationship("User", back_populates="comments")
