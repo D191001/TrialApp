@@ -1,35 +1,41 @@
-from app.api.endpoints import auth, feedback, users
+from contextlib import asynccontextmanager
+
+from app.api.api_v1.api import api_router
 from app.core.config import settings
-from app.db import models
-from app.db.database import engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Инициализация базы данных
-models.Base.metadata.create_all(bind=engine)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Application startup...")
+    yield
+    print("Application shutdown...")
+
 
 app = FastAPI(
     title="TrialApp API",
-    description="Backend API с OAuth2 авторизацией через Яндекс и системой комментариев",
+    description="Backend API для приложения знакомств",
     version="1.0.0",
+    openapi_url="/api/openapi.json",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
+    lifespan=lifespan,
 )
 
-# Настройка CORS
+# CORS middleware с обновленными настройками
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://trialapp.ru",
-        "http://localhost:8000",
-        "https://oauth.yandex.ru",
+        "http://localhost:3000",  # Для разработки
+        "http://localhost:8000",  # Для локального API
+        "https://trialapp.ru",  # Для продакшена
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
-# Подключение роутеров с префиксами
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-app.include_router(feedback.router, prefix="/api/feedback", tags=["feedback"])
-app.include_router(users.router, prefix="/api/users", tags=["users"])
+# Роуты API
+app.include_router(api_router, prefix="/api/v1")

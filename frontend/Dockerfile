@@ -1,20 +1,21 @@
-FROM node:16 as build
-
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Устанавливаем зависимости
 COPY package*.json ./
-RUN npm ci
-
-# Копируем исходники
+RUN npm install
 COPY . .
-
-# Собираем приложение
 RUN npm run build
 
-# Production образ
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]
+FROM node:20-alpine AS runner
+WORKDIR /app
+COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/package*.json ./
+RUN npm install --production
+
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

@@ -1,11 +1,11 @@
-name: Deploy TrialApp
+name: Deploy Backend
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-and-push:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,61 +16,12 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
       - name: Build and push backend
         uses: docker/build-push-action@v4
         with:
           context: ./backend
           push: true
           tags: trumphack/trialapp-backend:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
-
-      - name: Build and push frontend
-        uses: docker/build-push-action@v4
-        with:
-          context: ./frontend
-          push: true
-          tags: trumphack/trialapp-frontend:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new
-          build-args: |
-            NODE_ENV=production
-            CI=true
-
-      - name: Build and push nginx
-        uses: docker/build-push-action@v4
-        with:
-          context: ./gateway
-          push: true
-          tags: trumphack/trialapp-gateway:latest
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Copy docker-compose and env files
-        uses: appleboy/scp-action@v0.1.7
-        
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          password: ${{ secrets.USER_PASSWORD }}
-          port: 22
-          source: "docker-compose.production.yml,.env"
-          target: "trialapp"
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
@@ -78,43 +29,8 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: ${{ secrets.USER_PASSWORD }}
-          port: 22
           script: |
             cd trialapp
-            docker compose -f docker-compose.production.yml down -v
+            docker compose -f docker-compose.production.yml down
             docker compose -f docker-compose.production.yml pull
-            
-            # Создаем пользователя и БД до запуска контейнеров
-            docker compose -f docker-compose.production.yml up -d db
-            sleep 10
-            
-            # Ждем готовности БД
-            until docker compose -f docker-compose.production.yml exec -T db pg_isready; do
-              echo "Waiting for postgres..."
-              sleep 2
-            done
-            
-            # Проверяем существование пользователя перед созданием
-            docker compose -f docker-compose.production.yml exec -T db psql -U postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='user'" | grep -q 1 || \
-            docker compose -f docker-compose.production.yml exec -T db psql -U postgres -c "CREATE USER \"user\" WITH PASSWORD 'mysecretpassword';"
-            
-            # Проверяем существование БД перед созданием
-            docker compose -f docker-compose.production.yml exec -T db psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='database'" | grep -q 1 || \
-            docker compose -f docker-compose.production.yml exec -T db psql -U postgres -c "CREATE DATABASE database WITH OWNER \"user\";"
-            
-            # Запускаем остальные сервисы
             docker compose -f docker-compose.production.yml up -d
-            
-            # Проверяем через curl напрямую бэкенд
-            for i in {1..10}; do
-              if curl -s http://localhost:8000/health-check | grep -q "healthy"; then
-                echo "Application deployed successfully"
-                exit 0
-              fi
-              echo "Waiting for services... ($i/10)"
-              sleep 10
-            done
-            
-            echo "Deployment failed. Logs:"
-            docker compose -f docker-compose.production.yml logs
-            exit 1
